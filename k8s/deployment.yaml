@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: dotnet-aks-app
-        image: aksgitaction.azurecr.io/dotnet-aks-app:latest
+        image: aksgitaction.azurecr.io
         ports:
         - containerPort: 80
