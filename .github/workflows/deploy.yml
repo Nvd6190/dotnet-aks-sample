@@ -1,4 +1,4 @@
-name: Build and Deploy to AKS using Service Principal
+name: Build and Deploy to AKS
 
 on:
   push:
@@ -6,39 +6,31 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - name: Azure Login using Service Principal
-      uses: azure/login@v1
+    - name: Login to Azure Container Registry
+      uses: azure/docker-login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
 
-    - name: Docker Login to ACR
+    - name: Build and push image with latest tag
       run: |
-        echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} \
-          --username ${{ secrets.ACR_USERNAME }} --password-stdin
-
-    - name: Build and Push Docker Image
-      run: |
-        IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/dotnet-aks-app:${{ github.sha }}
+        IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/dotnet-aks-app:latest
         docker build -t $IMAGE .
         docker push $IMAGE
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-    - name: Set AKS context
-      uses: azure/aks-set-context@v3
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-        cluster-name: ${{ secrets.CLUSTER_NAME }}
-        resource-group: ${{ secrets.RESOURCE_GROUP }}
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
 
     - name: Deploy to AKS
       run: |
-        sed "s|<IMAGE>|$IMAGE|g" k8s/deployment.yaml > k8s/deployment-final.yaml
+        sed "s|<IMAGE>|${{ env.IMAGE }}|g" k8s/deployment.yaml > k8s/deployment-final.yaml
         kubectl apply -f k8s/deployment-final.yaml
-        kubectl apply -f k8s/service.yaml
