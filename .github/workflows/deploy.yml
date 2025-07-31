@@ -39,8 +39,8 @@ jobs:
     - name: Set AKS context
       uses: azure/aks-set-context@v3
       with:
-        cluster-name: ${{ secrets.CLUSTER_NAME }}
-        resource-group: ${{ secrets.RESOURCE_GROUP }}
+        cluster-name: AKS-GA
+        resource-group: AKS-GitOPS-RG
 
     - name: Deploy to AKS
       run: |
