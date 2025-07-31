@@ -26,10 +26,10 @@ jobs:
 
     - name: Docker Login to ACR
       run: |
-        echo ${{ secrets.ACR_PASSWORD }} | docker login ${{ secrets.ACR_LOGIN_SERVER }} \
+        echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_LOGIN_SERVER }} \
           --username ${{ secrets.ACR_USERNAME }} --password-stdin
 
-    - name: Build and Push Image
+    - name: Build and Push Docker Image to ACR
       run: |
         IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/dotnet-aks-app:${{ github.sha }}
         docker build -t $IMAGE .
@@ -39,8 +39,8 @@ jobs:
     - name: Set AKS context
       uses: azure/aks-set-context@v3
       with:
-        cluster-name: AKS-GA
-        resource-group: AKS-GitOPS-RG
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
+        resource-group: ${{ secrets.RESOURCE_GROUP }}
 
     - name: Deploy to AKS
       run: |
