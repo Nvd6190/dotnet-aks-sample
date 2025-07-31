@@ -4,9 +4,9 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY . .
-RUN dotnet restore
-RUN dotnet publish -c Release -o /app/publish
+COPY ./app/ ./app/
+RUN dotnet restore app/dotnet-aks-app.csproj
+RUN dotnet publish app/dotnet-aks-app.csproj -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
