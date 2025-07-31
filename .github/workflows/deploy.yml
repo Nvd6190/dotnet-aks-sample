@@ -5,30 +5,41 @@ on:
     branches:
       - main
 
+env:
+  IMAGE_NAME: dotnet-aks-app
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - name: Login to Azure Container Registry
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Docker login to ACR
       uses: azure/docker-login@v1
       with:
         login-server: ${{ secrets.ACR_LOGIN_SERVER }}
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
-    - name: Build and push image with latest tag
+    - name: Build and push Docker image
       run: |
-        IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/dotnet-aks-app:latest
+        IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
         docker build -t $IMAGE .
         docker push $IMAGE
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+                               --name ${{ secrets.AKS_CLUSTER_NAME }} \
+                               --admin --overwrite-existing
 
     - name: Deploy to AKS
       run: |
