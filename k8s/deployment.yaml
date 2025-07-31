@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-aks-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dotnet-aks-app
+  template:
+    metadata:
+      labels:
+        app: dotnet-aks-app
+    spec:
+      containers:
+      - name: dotnet-aks-app
+        image: <IMAGE>
+        ports:
+        - containerPort: 80
